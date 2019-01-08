@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>vue-cdd</title>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.21/vue.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.23.0/moment.min.js"></script>
+  </head>
+  <body>
+    <div id="main">
+      <form>
+        <p>Date début contrat : <input v-model="startDate" type="date" /></p>
+        <p>Date fin contrat : <input v-model="endDate" type="date" /></p>
+      </form>
+      <p>Durée du contrat : {{ duration }}</p>
+    </div>
+
+    <script>
+      const demo = new Vue({
+        el: '#main',
+        data: {
+          startDate: '',
+          endDate: ''
+        },
+        computed: {
+          duration: function() {
+            const startDate = moment(this.endDate, 'YYYY-MM-DD')
+            const endDate = moment(this.endDate, 'YYYY-MM-DD')
+
+            return moment.duration(startDate.diff(endDate)).humanize()
+          }
+        }
+      })
+    </script>
+  </body>
+</html>
