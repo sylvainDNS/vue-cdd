@@ -4,36 +4,136 @@
     <title>vue-cdd</title>
     <link
       rel="stylesheet"
-      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
     />
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.21/vue.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.23.0/moment.min.js"></script>
   </head>
   <body>
-    <div id="main">
-      <form>
-        <p>Date début contrat : <input v-model="startDate" type="date" /></p>
-        <p>Date fin contrat : <input v-model="endDate" type="date" /></p>
-      </form>
-      <p>Durée du contrat : {{ duration }}</p>
+    <div id="main" class="row">
+      <div class="card  col-md-4 offset-md-1">
+        <h5 class="card-header">Formulaire de saisie</h5>
+        <div class="card-body">
+          <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Début contrat :</span>
+            </div>
+            <input
+              class="form-control"
+              v-model="startDate"
+              type="date"
+              :min="minDate"
+              :max="endDate"
+            />
+          </div>
+
+          <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Fin contrat :</span>
+            </div>
+            <input
+              class="form-control"
+              v-model="endDate"
+              type="date"
+              id
+              :min="startDate"
+              :max="maxDate"
+            />
+          </div>
+
+          <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text">Heures hebdo :</span>
+            </div>
+            <input
+              class="form-control"
+              v-model="weeklyHours"
+              type="number"
+              min="0"
+            />
+          </div>
+        </div>
+      </div>
+      <div class="card col-md-4 offset-md-2">
+        <h5 class="card-header">Résumé</h5>
+        <ul class="list-group list-group-flush">
+          <li class="list-group-item">
+            Contrat du {{ format(startDate) }} au {{ format(endDate) }}
+          </li>
+          <li class="list-group-item">Durée du contrat : {{ days }} jours</li>
+          <li class="list-group-item">Durée du contrat : {{ hours }} heures</li>
+          <li class="list-group-item">ETP : {{ etp }}%</li>
+          <li class="list-group-item">Congés acquis : {{ vacation }}</li>
+        </ul>
+      </div>
     </div>
 
     <script>
       const demo = new Vue({
         el: '#main',
         data: {
-          startDate: '',
-          endDate: ''
+          startDate: moment().format('YYYY-MM-DD'),
+          endDate: '',
+          weeklyHours: 35
+        },
+        methods: {
+          format: function(date) {
+            return moment(date).format('DD/MM/YYYY')
+          },
+          error: function() {
+            return 'La durée maximale du contrat est de 365 jours.'
+          }
+        },
+        watch: {
+          startDate: function() {
+            if (
+              moment(this.startDate) > moment(this.endDate) ||
+              moment(this.startDate) < moment(this.minDate)
+            )
+              this.startDate = this.endDate
+          },
+          endDate: function() {
+            if (
+              moment(this.endDate) < moment(this.startDate) ||
+              moment(this.endDate) < moment(this.maxDate)
+            )
+              this.endDate = this.startDate
+          }
         },
         computed: {
-          duration: function() {
-            const startDate = moment(this.endDate, 'YYYY-MM-DD')
-            const endDate = moment(this.endDate, 'YYYY-MM-DD')
+          days: function() {
+            const startDate = moment(this.startDate)
+            const endDate = moment(this.endDate)
 
-            return moment.duration(startDate.diff(endDate)).humanize()
+            return endDate.diff(startDate, 'days') + 1
+          },
+          etp: function() {
+            return ((this.weeklyHours / 35) * 100).toFixed(2)
+          },
+          hours: function() {
+            const startDate = moment(this.startDate)
+            const endDate = moment(this.endDate)
+            const weeks = endDate.diff(startDate, 'weeks')
+
+            if (weeks > 1) return weeks * this.weeklyHours
+            else return this.weeklyHours
+          },
+          maxDate: function() {
+            return moment(this.startDate)
+              .add(364, 'days')
+              .format('YYYY-MM-DD')
+          },
+          minDate: function() {
+            return moment(this.endDate)
+              .subtract(364, 'days')
+              .format('YYYY-MM-DD')
+          },
+          vacation: function() {
+            return Math.ceil(2.08 * (this.days / 28))
           }
         }
       })
