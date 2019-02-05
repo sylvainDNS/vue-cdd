@@ -66,8 +66,9 @@
           </li>
           <li class="list-group-item">Durée du contrat : {{ days }} jours</li>
           <li class="list-group-item">Durée du contrat : {{ hours }} heures</li>
-          <li class="list-group-item">ETP : {{ etp }}%</li>
+          <li class="list-group-item">ETP : {{ etp }}</li>
           <li class="list-group-item">Congés acquis : {{ vacation }}</li>
+          <li class="list-group-item">Heures à effectuer : {{ hoursToDo }}</li>
         </ul>
       </div>
     </div>
@@ -99,7 +100,7 @@
           endDate: function() {
             if (
               moment(this.endDate) < moment(this.startDate) ||
-              moment(this.endDate) < moment(this.maxDate)
+              moment(this.endDate) > moment(this.maxDate)
             )
               this.endDate = this.startDate
           }
@@ -107,12 +108,18 @@
         computed: {
           days: function() {
             const startDate = moment(this.startDate)
-            const endDate = moment(this.endDate)
+            const endDate = moment(this.endDate).add(1, 'd')
 
-            return endDate.diff(startDate, 'days') + 1
+            return endDate.diff(startDate, 'days')
+          },
+          openedDays: function() {
+            const startDate = moment(this.startDate)
+            const endDate = moment(this.endDate).add(1, 'd')
+
+            return endDate.diff(startDate, 'week') * 5 - 1 + endDate.day()
           },
           etp: function() {
-            return ((this.weeklyHours / 35) * 100).toFixed(2)
+            return (this.weeklyHours / 35).toFixed(2)
           },
           hours: function() {
             const startDate = moment(this.startDate)
@@ -133,7 +140,11 @@
               .format('YYYY-MM-DD')
           },
           vacation: function() {
-            return Math.ceil(2.08 * (this.days / 28))
+            const vacation = Math.ceil(2.08 * (this.days / 28))
+            return vacation > 25 ? 25 : vacation
+          },
+          hoursToDo: function() {
+            return (this.openedDays * 7 * this.etp).toFixed(2)
           }
         }
       })
